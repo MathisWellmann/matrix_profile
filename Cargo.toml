@@ -14,10 +14,6 @@ csv = "1"
 criterion = "0.5"
 
 [[bench]]
-name = "squared_euclidean_distance"
-harness = false
-
-[[bench]]
 name = "distance_profile"
 harness = false
 
