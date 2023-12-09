@@ -1,22 +1,33 @@
-#![feature(portable_simd)]
-
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 use matrix_profile::distance_profile;
 
-fn criterion_benchmark(c: &mut Criterion) {
-    const SIMD_LANES: usize = 16;
-    // A year of minute candles.
-    const HISTORY_LEN: usize = 32850 * SIMD_LANES;
-    const WINDOW_SIZE: usize = 4 * SIMD_LANES;
-
+fn bench_with_history<const HISTORY_LEN: usize>(c: &mut Criterion) {
     let history = Vec::from_iter((0..HISTORY_LEN).map(|v| v as f32));
-    let window = &history[history.len() - WINDOW_SIZE..];
-    c.bench_function("distance_profile_window", |bencher| {
-        bencher.iter(|| {
-            let profile = distance_profile(black_box(window), black_box(&history));
-            let _ = black_box(profile);
-        });
-    });
+
+    let mut group = c.benchmark_group(format!("distance_profile_{}k", HISTORY_LEN / 1000));
+    for window_size in [16, 32, 64, 128, 256, 512, 1024].iter() {
+        let window = &history[history.len() - window_size..];
+
+        group.throughput(Throughput::Elements(1));
+        group.bench_with_input(
+            BenchmarkId::from_parameter(window_size),
+            window_size,
+            |b, _| {
+                b.iter(|| {
+                    let dist = distance_profile(window, &history);
+                    let _ = black_box(dist);
+                });
+            },
+        );
+    }
+    group.finish()
+}
+
+fn criterion_benchmark(c: &mut Criterion) {
+    bench_with_history::<100_000>(c);
+    bench_with_history::<250_000>(c);
+    // About a year of minute candles.
+    bench_with_history::<500_000>(c);
 }
 
 criterion_group!(benches, criterion_benchmark);
