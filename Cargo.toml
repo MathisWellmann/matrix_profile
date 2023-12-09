@@ -1,0 +1,17 @@
+[package]
+name = "matrix_profile"
+version = "0.1.0"
+edition = "2021"
+authors = ["MathisWellmann <wellmannmathis@gmail.com>"]
+publish = false
+license = "GNU AGPLv3-or-later"
+
+[dependencies]
+
+[dev-dependencies]
+csv = "1"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+panic = "abort"
