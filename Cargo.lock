@@ -282,6 +282,7 @@ version = "0.1.0"
 dependencies = [
  "criterion",
  "csv",
+ "simd_euclidean",
 ]
 
 [[package]]
@@ -479,6 +480,11 @@ dependencies = [
  "ryu",
  "serde",
 ]
+
+[[package]]
+name = "simd_euclidean"
+version = "0.1.0"
+source = "git+https://github.com/lazear/simd-euclidean#7b456d56108e4b282dc0d01182460770c5b04a4c"
 
 [[package]]
 name = "syn"

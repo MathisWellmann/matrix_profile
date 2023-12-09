@@ -5,11 +5,14 @@
 
 use std::simd::f32x16;
 
+use simd_euclidean::Vectorized;
+
 #[cfg(test)]
 mod load_from_csv;
 
 /// Compute the squared euclidean distance
-pub fn squared_euclidean_distance(a: f32x16, b: f32x16) -> f32 {
+/// TODO: make generic over SIMD width.
+pub fn squared_euclidean_distance_simd(a: f32x16, b: f32x16) -> f32 {
     let diff = a - b;
     let squared = diff * diff;
 
@@ -45,6 +48,26 @@ pub fn distance_profile(window: &[f32], history: &[f32]) -> Vec<f32> {
     out
 }
 
+/// A simd version of the distance profile.
+///
+/// # Arguments:
+/// `window`: The most recent sliding window which to compute a vector of euclidian distances agains.
+/// `history`: All the previous datapoints, including the `window` or not.
+///
+/// # Returns:
+/// A vector of length `history.len()`.
+pub fn distance_profile_simd(window: &[f32], history: &[f32]) -> Vec<f32> {
+    const WINDOW_SIZE: usize = 64;
+    debug_assert_eq!(WINDOW_SIZE, window.len());
+    let mut out = vec![0.0; history.len()];
+    for i in 0..history.len() - WINDOW_SIZE {
+        let comp = &history[i..i + WINDOW_SIZE];
+        let dist = Vectorized::distance(window, comp);
+        out[i + WINDOW_SIZE - 1] = dist;
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -58,7 +81,7 @@ mod tests {
         let b = f32x16::from_array([3.0; 16]);
         println!("a: {a:?}");
         println!("b: {b:?}");
-        let dist = squared_euclidean_distance(a, b);
+        let dist = squared_euclidean_distance_simd(a, b);
         println!("dist: {dist}");
         assert_eq!(dist, 16.0);
     }
