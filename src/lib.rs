@@ -16,8 +16,13 @@ pub fn squared_euclidean_distance(a: f32x16, b: f32x16) -> f32 {
     squared.as_array().iter().sum()
 }
 
-/// To compare the performance with a non SIMD version like this.
-pub fn squared_euclidean_distance_non_simd(a: [f32; 16], b: [f32; 16]) -> f32 {
+/// To compare the performance of SIMD against an array variant.
+pub fn squared_euclidean_distance_array(a: [f32; 16], b: [f32; 16]) -> f32 {
+    a.iter().zip(b.iter()).map(|(a, b)| (a - b).powi(2)).sum()
+}
+
+/// To compare the performance of SIMD against slice variant.
+pub fn squared_euclidean_distance_slice(a: &[f32], b: &[f32]) -> f32 {
     a.iter().zip(b.iter()).map(|(a, b)| (a - b).powi(2)).sum()
 }
 
