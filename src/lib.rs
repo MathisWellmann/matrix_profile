@@ -35,7 +35,7 @@ pub fn squared_euclidean_distance_slice(a: &[f32], b: &[f32]) -> f32 {
 ///
 /// # Returns:
 /// A vector of length `history.len()`.
-fn distance_profile(window: &[f32], history: &[f32]) -> Vec<f32> {
+pub fn distance_profile(window: &[f32], history: &[f32]) -> Vec<f32> {
     let mut out = vec![0.0; history.len()];
     for i in 0..history.len() - window.len() {
         let comp = &history[i..i + window.len()];

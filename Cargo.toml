@@ -16,6 +16,10 @@ criterion = "0.5"
 name = "squared_euclidean_distance"
 harness = false
 
+[[bench]]
+name = "distance_profile"
+harness = false
+
 [profile.release]
 lto = "fat"
 codegen-units = 1
