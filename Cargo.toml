@@ -10,6 +10,11 @@ license = "GNU AGPLv3-or-later"
 
 [dev-dependencies]
 csv = "1"
+criterion = "0.5"
+
+[[bench]]
+name = "squared_euclidean_distance"
+harness = false
 
 [profile.release]
 lto = "fat"

@@ -9,20 +9,22 @@ use std::simd::f32x16;
 mod load_from_csv;
 
 /// Compute the squared euclidean distance
-fn squared_euclidean_distance(a: f32x16, b: f32x16) {
+pub fn squared_euclidean_distance(a: f32x16, b: f32x16) -> f32 {
     let diff = a - b;
-    println!("diff: {diff:?}");
-
     let squared = diff * diff;
-    println!("squared: {squared:?}");
+
+    squared.as_array().iter().sum()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    #[allow(unused)]
+    use criterion; // Used in benchmarks.
+
     #[test]
-    fn matrix_profil_on_trade_data() {
+    fn squared_euclidean_distance_test() {
         // let prices = load_from_csv::load_prices_from_csv("./data/Bitmex_XBTUSD_1M.csv");
         // debug_assert_eq!(prices.len(), 1_000_000);
 
@@ -30,6 +32,8 @@ mod tests {
         let b = f32x16::from_array([3.0; 16]);
         println!("a: {a:?}");
         println!("b: {b:?}");
-        squared_euclidean_distance(a, b);
+        let dist = squared_euclidean_distance(a, b);
+        println!("dist: {dist}");
+        assert_eq!(dist, 16.0);
     }
 }
