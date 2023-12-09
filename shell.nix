@@ -33,4 +33,6 @@ with pkgs; mkShell {
   EXTRA_CCFLAGS = "-I/usr/include";
 
   RUST_BACKTRACE=1;
+  # native cpu features show up to 25% performance improvement for 64, 128, 256, 512 and 1024 window
+  RUSTFLAGS="-C target-cpu=native";
 }
