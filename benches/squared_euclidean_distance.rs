@@ -1,7 +1,7 @@
 #![feature(portable_simd)]
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use matrix_profile::squared_euclidean_distance;
+use matrix_profile::{squared_euclidean_distance, squared_euclidean_distance_non_simd};
 use std::simd::f32x16;
 
 fn criterion_benchmark(c: &mut Criterion) {
@@ -11,6 +11,15 @@ fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("squared_euclidean_distance", |bencher| {
         bencher.iter(|| {
             let dist = squared_euclidean_distance(black_box(a), black_box(b));
+            let _ = black_box(dist);
+        });
+    });
+
+    let a = [2.0; 16];
+    let b = [3.0; 16];
+    c.bench_function("squared_euclidean_distance_non_simd", |bencher| {
+        bencher.iter(|| {
+            let dist = squared_euclidean_distance_non_simd(black_box(a), black_box(b));
             let _ = black_box(dist);
         });
     });
