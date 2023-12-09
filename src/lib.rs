@@ -21,7 +21,7 @@ mod load_from_csv;
 /// `window`: The most recent sliding window which to compute a vector of euclidian distances agains.
 /// `history`: All the previous datapoints, including the `window` or not.
 ///
-pub fn distance_profile(window: &[f32], history: &[f32]) -> Vec<f32> {
+pub fn distance_profile(history: &[f32], window: &[f32]) -> Vec<f32> {
     Vec::from_iter((0..history.len() - window.len() + 1).map(|i| {
         let comp = &history[i..i + window.len()];
         Vectorized::squared_distance(window, comp)
@@ -32,8 +32,8 @@ pub fn distance_profile(window: &[f32], history: &[f32]) -> Vec<f32> {
 /// The `window` is assumed to be non-overlapping with `history` and located at the end as such:
 /// | `history` | `window` |
 /// This ensures the trivial match of `window` == `window` is not returned nor any indices that are too close.
-pub fn index_with_most_similar_sequence(window: &[f32], history: &[f32]) -> Option<usize> {
-    let profile = distance_profile(window, history);
+pub fn index_with_most_similar_sequence(history: &[f32], window: &[f32]) -> Option<usize> {
+    let profile = distance_profile(history, window);
 
     let min_idx = profile
         .iter()
@@ -60,7 +60,7 @@ mod tests {
         println!("history: {history:?}");
         println!("window: {window:?}");
 
-        let profile = distance_profile(window, history);
+        let profile = distance_profile(history, window);
         println!("profile: {profile:?}");
         assert_eq!(&profile, &[128.0, 98.0, 72.0, 50.0, 32.0, 18.0, 8.0]);
     }
@@ -73,7 +73,7 @@ mod tests {
         println!("history: {history:?}");
         println!("window: {window:?}");
 
-        let idx = index_with_most_similar_sequence(window, history).expect("Is Some");
+        let idx = index_with_most_similar_sequence(history, window).expect("Is Some");
         println!("idx: {idx}");
         assert_eq!(idx, 6);
     }
