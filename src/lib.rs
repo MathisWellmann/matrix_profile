@@ -19,14 +19,8 @@ pub fn squared_euclidean_distance_simd(a: f32x16, b: f32x16) -> f32 {
     squared.as_array().iter().sum()
 }
 
-/// To compare the performance of SIMD against an array variant.
-pub fn squared_euclidean_distance_array(a: [f32; 16], b: [f32; 16]) -> f32 {
-    a.iter().zip(b.iter()).map(|(a, b)| (a - b).powi(2)).sum()
-}
-
 /// To compare the performance of SIMD against slice variant.
 pub fn squared_euclidean_distance_slice(a: &[f32], b: &[f32]) -> f32 {
-    debug_assert_eq!(a.len(), b.len(), "The length of the slices should match");
     a.iter().zip(b.iter()).map(|(a, b)| (a - b).powi(2)).sum()
 }
 
