@@ -19,7 +19,7 @@ pub fn distance_profile(window: &[f32], history: &[f32]) -> Vec<f32> {
     let mut out = vec![0.0; history.len()];
     for i in 0..history.len() - window.len() {
         let comp = &history[i..i + window.len()];
-        let dist = Vectorized::distance(window, comp);
+        let dist = Vectorized::squared_distance(window, comp);
         out[i + window.len() - 1] = dist;
     }
     out
