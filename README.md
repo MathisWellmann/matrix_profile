@@ -1,5 +1,5 @@
 # Distance Profile / Matrix Profile
-TLDR: The `distance_profile` computes a euclidean distance of a sliding window to a reference `window`.
+The `distance_profile` computes the euclidean distances of the sliding windows to a reference `window`.
 
 For a deep dive check out the [UCR](https://www.cs.ucr.edu/~eamonn/MatrixProfile.html) page on the topic.
 
@@ -8,11 +8,11 @@ This is because we leverage `SIMD` instructions when possible.
 Run `cargo bench` with and without the flag to see for yourself.
 
 ### Performance
-This implementation aims to be as fast as possible,
-however the obvious truth is that the runtime scales in `O(n * m)` where `n` is the number of datapoints
+This implementation aims to be as fast as possible utilizing `SIMD` intrinsics and vectorization where possible,
+however its obvious from the algorithm description that the runtime scales in `O(n * m)` where `n` is the number of datapoints
 in the timeseries `history` and `m` is the `window` length.
 
-But don't worry, benchmarks are ripping fast (on an Intel 13900KS with `RUSTFLAGS="-C target-cpu=native"`) (2023-12-06 @ `facbaf6`):
+But don't worry, benchmarks are ripping fast (on an Intel 13900KS with `RUSTFLAGS="-C target-cpu=native"`) (2023-12-06, commit `facbaf6`):
 
 | HistoryLen | WindowLen | Runtime     |
 |------------|-----------|-------------|
