@@ -3,6 +3,7 @@
 //! Crate for computing the matrix profile of a timeseries.
 
 use simd_euclidean::Vectorized;
+use tracing::debug;
 
 #[cfg(test)]
 mod load_from_csv;
@@ -32,7 +33,7 @@ pub fn distance_profile(history: &[f32], window: &[f32]) -> Vec<f32> {
 /// The `window` is assumed to be non-overlapping with `history` and located at the end as such:
 /// | `history` | `window` |
 /// This ensures the trivial match of `window` == `window` is not returned nor any indices that are too close.
-pub fn index_with_most_similar_sequence(history: &[f32], window: &[f32]) -> Option<usize> {
+pub fn index_of_motif(history: &[f32], window: &[f32]) -> Option<usize> {
     let profile = distance_profile(history, window);
 
     let min_idx = profile
@@ -40,7 +41,7 @@ pub fn index_with_most_similar_sequence(history: &[f32], window: &[f32]) -> Opti
         .enumerate()
         .min_by(|(_, a), (_, b)| a.total_cmp(b))
         .map(|(index, _)| index)?;
-    println!("min_idx: {min_idx}");
+    debug!("min_idx: {min_idx}");
 
     Some(min_idx)
 }
@@ -73,7 +74,7 @@ mod tests {
         println!("history: {history:?}");
         println!("window: {window:?}");
 
-        let idx = index_with_most_similar_sequence(history, window).expect("Is Some");
+        let idx = index_of_motif(history, window).expect("Is Some");
         println!("idx: {idx}");
         assert_eq!(idx, 6);
     }
