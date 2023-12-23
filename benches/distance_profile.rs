@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use matrix_profile::distance_profile;
+use matrix_profile::naive::distance_profile;
 
 fn bench_with_history<const HISTORY_LEN: usize>(c: &mut Criterion) {
     let history = Vec::from_iter((0..HISTORY_LEN).map(|v| v as f32));
