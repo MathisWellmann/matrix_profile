@@ -1,7 +1,6 @@
 //! This module contains the naive implementation using convolutions with an O(n * m) runtime.
 
 use simd_euclidean::Vectorized;
-use tracing::debug;
 
 /// The `distance_profile` computes a euclidean distance from a sliding window of `history` to a reference `window`.
 ///
@@ -36,7 +35,6 @@ pub fn index_of_motif(history: &[f32], window: &[f32]) -> Option<usize> {
         .enumerate()
         .min_by(|(_, a), (_, b)| a.total_cmp(b))
         .map(|(index, _)| index)?;
-    debug!("min_idx: {min_idx}");
 
     Some(min_idx)
 }

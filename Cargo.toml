@@ -7,7 +7,6 @@ publish = false
 license = "GNU AGPLv3-or-later"
 
 [dependencies]
-tracing = "0.1"
 simd_euclidean = { git = "https://github.com/lazear/simd-euclidean" }
 
 [dev-dependencies]
