@@ -38,6 +38,9 @@ But don't worry, benchmarks are ripping fast (on an Intel 13900KS with `RUSTFLAG
 | 500_000    |  512      | 14.150  ms  |
 | 500_000    | 1024      | 27.290  ms  |
 
+### MSRV
+Minimum supported rust version is `1.75.0` due to the use of `-> impl Iterator<_>` return types.
+
 ### LICENSE:
 Copyright (C) 2023 <MathisWellmann wellmannmathis@gmail.com>
 

@@ -39,6 +39,18 @@ pub fn index_of_motif(history: &[f32], window: &[f32]) -> Option<usize> {
     Some(min_idx)
 }
 
+/// Find all starting indices of the sequence which has the lowest euclidean distance to the specified `window`.
+/// The `window` is assumed to be non-overlapping with `history` and located at the end as such:
+/// | `history` | `window` |
+/// This ensures the trivial match of `window` == `window` is not returned nor any indices that are too close.
+pub fn index_of_motif_iterator(history: &[f32], window: &[f32]) -> impl Iterator<Item = usize> {
+    let profile = distance_profile(history, window);
+    let mut profile_with_index = Vec::from_iter(profile.into_iter().enumerate());
+    profile_with_index.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+
+    profile_with_index.into_iter().map(|(i, _distance)| i)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -70,5 +82,15 @@ mod tests {
         let idx = index_of_motif(history, window).expect("Is Some");
         println!("idx: {idx}");
         assert_eq!(idx, 6);
+    }
+
+    #[test]
+    fn test_index_of_motif_iterator() {
+        let history = Vec::from_iter((0..10).map(|v| v as f32));
+        let window = Vec::from_iter((10..13).map(|v| v as f32));
+        assert_eq!(
+            Vec::from_iter(index_of_motif_iterator(&history, &window)),
+            vec![7, 6, 5, 4, 3, 2, 1, 0]
+        );
     }
 }
