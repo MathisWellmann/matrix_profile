@@ -23,22 +23,6 @@ pub fn distance_profile(history: &[f32], window: &[f32]) -> Vec<f32> {
     }))
 }
 
-/// Find the starting index of the sequence which has the lowest euclidean distance to the specified `window`.
-/// The `window` is assumed to be non-overlapping with `history` and located at the end as such:
-/// | `history` | `window` |
-/// This ensures the trivial match of `window` == `window` is not returned nor any indices that are too close.
-pub fn index_of_motif(history: &[f32], window: &[f32]) -> Option<usize> {
-    let profile = distance_profile(history, window);
-
-    let min_idx = profile
-        .iter()
-        .enumerate()
-        .min_by(|(_, a), (_, b)| a.total_cmp(b))
-        .map(|(index, _)| index)?;
-
-    Some(min_idx)
-}
-
 /// Find all starting indices of the sequence which has the lowest euclidean distance to the specified `window`.
 /// The `window` is assumed to be non-overlapping with `history` and located at the end as such:
 /// | `history` | `window` |
@@ -69,19 +53,6 @@ mod tests {
         let profile = distance_profile(history, window);
         println!("profile: {profile:?}");
         assert_eq!(&profile, &[128.0, 98.0, 72.0, 50.0, 32.0, 18.0, 8.0]);
-    }
-
-    #[test]
-    fn test_index_with_most_similar_sequence() {
-        let history = Vec::<f32>::from_iter((0..10).map(|v| v as f32));
-        let window = &history[8..];
-        let history = &history[0..8];
-        println!("history: {history:?}");
-        println!("window: {window:?}");
-
-        let idx = index_of_motif(history, window).expect("Is Some");
-        println!("idx: {idx}");
-        assert_eq!(idx, 6);
     }
 
     #[test]
