@@ -15,9 +15,15 @@ use simd_euclidean::Vectorized;
 /// # Arguments:
 /// `window`: The most recent sliding window which to compute a vector of euclidian distances agains.
 /// `history`: All the previous datapoints, including the `window` or not.
+/// `dim`: The dimensionality of the time-series.
+///        The datapoints of dimensions are expected to be right next to each other in the slice.
+///        E.g For a 2 dimensional timeseries with x0, x1, x2, x3 as the first dimension and
+///        y0, y1, y2, y3 as the second dimension, the datapoints should appear as such in the slices:
+///        x0, y0, x1, y1, x2, y2, x3, y3.
 ///
-pub fn distance_profile(history: &[f32], window: &[f32]) -> Vec<f32> {
-    Vec::from_iter((0..history.len() - window.len() + 1).map(|i| {
+pub fn distance_profile(history: &[f32], window: &[f32], dim: usize) -> Vec<f32> {
+    assert!(dim > 0, "A time series must be at least 1 dimensional");
+    Vec::from_iter((0..history.len() - window.len() + 1).step_by(dim).map(|i| {
         let comp = &history[i..i + window.len()];
         Vectorized::squared_distance(window, comp)
     }))
@@ -27,8 +33,12 @@ pub fn distance_profile(history: &[f32], window: &[f32]) -> Vec<f32> {
 /// The `window` is assumed to be non-overlapping with `history` and located at the end as such:
 /// | `history` | `window` |
 /// This ensures the trivial match of `window` == `window` is not returned nor any indices that are too close.
-pub fn index_of_motif_iterator(history: &[f32], window: &[f32]) -> impl Iterator<Item = usize> {
-    let profile = distance_profile(history, window);
+pub fn index_of_motif_iterator(
+    history: &[f32],
+    window: &[f32],
+    dim: usize,
+) -> impl Iterator<Item = usize> {
+    let profile = distance_profile(history, window, dim);
     let mut profile_with_index = Vec::from_iter(profile.into_iter().enumerate());
     profile_with_index.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
 
@@ -50,9 +60,26 @@ mod tests {
         println!("history: {history:?}");
         println!("window: {window:?}");
 
-        let profile = distance_profile(history, window);
+        let profile = distance_profile(history, window, 1);
         println!("profile: {profile:?}");
         assert_eq!(&profile, &[128.0, 98.0, 72.0, 50.0, 32.0, 18.0, 8.0]);
+    }
+
+    #[test]
+    fn test_distance_profile_2d() {
+        let xs = Vec::<f32>::from_iter((0..10).map(|v| v as f32));
+        let ys = Vec::<f32>::from_iter((0..10).map(|v| v as f32));
+        let history = Vec::from_iter(xs.into_iter().zip(ys).map(|(x, y)| vec![x, y]).flatten());
+        println!("2D history: {history:?}");
+
+        let window = &history[16..];
+        let history = &history[..16];
+        println!("history: {history:?}");
+        println!("window: {window:?}");
+
+        let profile = distance_profile(history, window, 2);
+        println!("profile: {profile:?}");
+        assert_eq!(&profile, &[256.0, 196.0, 144.0, 100.0, 64.0, 36.0, 16.0]);
     }
 
     #[test]
@@ -60,7 +87,7 @@ mod tests {
         let history = Vec::from_iter((0..10).map(|v| v as f32));
         let window = Vec::from_iter((10..13).map(|v| v as f32));
         assert_eq!(
-            Vec::from_iter(index_of_motif_iterator(&history, &window)),
+            Vec::from_iter(index_of_motif_iterator(&history, &window, 1)),
             vec![7, 6, 5, 4, 3, 2, 1, 0]
         );
     }
