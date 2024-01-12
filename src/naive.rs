@@ -50,7 +50,7 @@ fn normalize(vals: &[f32]) -> Vec<f32> {
     let mut high = vals[0];
     let mut low = vals[0];
 
-    for v in vals {
+    for v in vals.iter().skip(1) {
         if *v < low {
             low = *v;
         }
@@ -59,12 +59,13 @@ fn normalize(vals: &[f32]) -> Vec<f32> {
         }
     }
 
-    Vec::from_iter(vals.iter().map(|v| scale(high, low, *v)))
+    Vec::from_iter(vals.iter().map(|v| scale(low, high, *v)))
 }
 
+/// Scaling a `value` from range (`from_min`..`from_max`) to (0..1)
 #[inline]
-fn scale(high: f32, low: f32, value: f32) -> f32 {
-    (value - low) * (high - low)
+fn scale(from_min: f32, from_max: f32, value: f32) -> f32 {
+    (value - from_min) / (from_max - from_min)
 }
 
 /// Find all starting indices of the sequence which has the lowest euclidean distance to the specified `window`.
@@ -92,7 +93,7 @@ mod tests {
     use criterion; // Used in benchmarks.
 
     #[test]
-    fn test_distance_profile() {
+    fn test_distance_profile_raw() {
         let history = Vec::<f32>::from_iter((0..10).map(|v| v as f32));
         let window = &history[8..];
         let history = &history[0..8];
@@ -102,6 +103,24 @@ mod tests {
         let profile = distance_profile(history, window, 1, false);
         println!("profile: {profile:?}");
         assert_eq!(&profile, &[128.0, 98.0, 72.0, 50.0, 32.0, 18.0, 8.0]);
+    }
+
+    #[test]
+    fn test_scale() {
+        assert_eq!(scale(0.0, 1.0, 0.0), 0.0);
+        assert_eq!(scale(0.0, 1.0, 1.0), 1.0);
+        assert_eq!(scale(0.0, 2.0, 1.0), 0.5);
+        assert_eq!(scale(1.0, 2.0, 1.0), 0.0);
+        assert_eq!(scale(1.0, 2.0, 2.0), 1.0);
+    }
+
+    #[test]
+    fn test_normalize() {
+        let vals = Vec::from_iter((0..10).map(|v| v as f32));
+        assert_eq!(
+            normalize(&vals),
+            Vec::from_iter((0..10).map(|v| (v as f32) / 9.0))
+        )
     }
 
     #[test]
