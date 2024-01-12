@@ -14,7 +14,7 @@ fn bench_with_history<const HISTORY_LEN: usize>(c: &mut Criterion) {
             window_size,
             |b, _| {
                 b.iter(|| {
-                    let dist = distance_profile(&history, window);
+                    let dist = distance_profile(&history, window, 1, false);
                     let _ = black_box(dist);
                 });
             },
