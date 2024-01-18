@@ -277,11 +277,12 @@ checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
 
 [[package]]
 name = "matrix_profile"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "criterion",
  "csv",
  "simd_euclidean",
+ "sliding_features",
 ]
 
 [[package]]
@@ -476,8 +477,13 @@ dependencies = [
 
 [[package]]
 name = "simd_euclidean"
-version = "0.1.0"
-source = "git+https://github.com/lazear/simd-euclidean#7b456d56108e4b282dc0d01182460770c5b04a4c"
+version = "0.2.0"
+
+[[package]]
+name = "sliding_features"
+version = "2.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "206d35c19f2fbff5ad55a95ad0b0c9c8087985fff4fd71246ca6e7e0a988cb30"
 
 [[package]]
 name = "syn"

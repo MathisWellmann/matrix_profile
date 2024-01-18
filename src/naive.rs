@@ -1,6 +1,7 @@
 //! This module contains the naive implementation using convolutions with an O(n * m) runtime.
 
 use simd_euclidean::Vectorized;
+use sliding_features::{Echo, View, WelfordOnline};
 
 /// The `distance_profile` computes a euclidean distance from a sliding window of `history` to a reference `window`.
 ///
@@ -24,16 +25,27 @@ use simd_euclidean::Vectorized;
 pub fn distance_profile(history: &[f32], window: &[f32], dim: usize, normalize: bool) -> Vec<f32> {
     match normalize {
         false => distance_profile_raw(history, window, dim),
-        true => distance_profile_normalized(history, window, dim),
+        true => distance_profile_z_normalized(history, window, dim),
     }
 }
 
-fn distance_profile_normalized(history: &[f32], window: &[f32], dim: usize) -> Vec<f32> {
+fn distance_profile_z_normalized(history: &[f32], window: &[f32], dim: usize) -> Vec<f32> {
     assert!(dim > 0, "A time series must be at least 1 dimensional");
-    let normalized_window = normalize(window);
+
+    let normalized_window = z_normalize(window);
+
+    // Keep sliding window statistics to perform z-score normalization for the history slices.
+    let mut welford = WelfordOnline::new(Echo::new(), window.len());
     Vec::from_iter((0..history.len() - window.len() + 1).step_by(dim).map(|i| {
-        let comp = normalize(&history[i..i + window.len()]);
-        Vectorized::squared_distance(&normalized_window, &comp)
+        for i in 0..dim {
+            welford.update(history[i + dim] as f64);
+        }
+        Vectorized::squared_distance_z_normalized(
+            normalized_window.as_slice(),
+            &history[i..i + window.len()],
+            welford.mean() as f32,
+            welford.variance().sqrt() as f32,
+        )
     }))
 }
 
@@ -41,31 +53,21 @@ fn distance_profile_raw(history: &[f32], window: &[f32], dim: usize) -> Vec<f32>
     assert!(dim > 0, "A time series must be at least 1 dimensional");
     Vec::from_iter((0..history.len() - window.len() + 1).step_by(dim).map(|i| {
         let comp = &history[i..i + window.len()];
-        Vectorized::squared_distance(window, comp)
+        // No normalization is performed
+        Vectorized::squared_distance_z_normalized(window, comp, 0.0, 1.0)
     }))
 }
 
-/// Perform a high-low normalization
-fn normalize(vals: &[f32]) -> Vec<f32> {
-    let mut high = vals[0];
-    let mut low = vals[0];
-
-    for v in vals.iter().skip(1) {
-        if *v < low {
-            low = *v;
-        }
-        if *v > high {
-            high = *v;
-        }
+/// Compute mean and standard deviation of values
+fn z_normalize(vals: &[f32]) -> Vec<f32> {
+    let mut welford = WelfordOnline::new(Echo::new(), vals.len());
+    for v in vals {
+        welford.update(*v as f64);
     }
-
-    Vec::from_iter(vals.iter().map(|v| scale(low, high, *v)))
-}
-
-/// Scaling a `value` from range (`from_min`..`from_max`) to (0..1)
-#[inline]
-fn scale(from_min: f32, from_max: f32, value: f32) -> f32 {
-    (value - from_min) / (from_max - from_min)
+    Vec::from_iter(
+        vals.iter()
+            .map(|v| (*v - welford.mean() as f32) / welford.variance().sqrt() as f32),
+    )
 }
 
 /// Find all starting indices of the sequence which has the lowest euclidean distance to the specified `window`.
@@ -103,24 +105,6 @@ mod tests {
         let profile = distance_profile(history, window, 1, false);
         println!("profile: {profile:?}");
         assert_eq!(&profile, &[128.0, 98.0, 72.0, 50.0, 32.0, 18.0, 8.0]);
-    }
-
-    #[test]
-    fn test_scale() {
-        assert_eq!(scale(0.0, 1.0, 0.0), 0.0);
-        assert_eq!(scale(0.0, 1.0, 1.0), 1.0);
-        assert_eq!(scale(0.0, 2.0, 1.0), 0.5);
-        assert_eq!(scale(1.0, 2.0, 1.0), 0.0);
-        assert_eq!(scale(1.0, 2.0, 2.0), 1.0);
-    }
-
-    #[test]
-    fn test_normalize() {
-        let vals = Vec::from_iter((0..10).map(|v| v as f32));
-        assert_eq!(
-            normalize(&vals),
-            Vec::from_iter((0..10).map(|v| (v as f32) / 9.0))
-        )
     }
 
     #[test]
